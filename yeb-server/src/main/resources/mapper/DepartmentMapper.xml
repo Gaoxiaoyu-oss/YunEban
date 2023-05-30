@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gxy.server.mapper.DepartmentMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gxy.server.pojo.Department">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="parentId" property="parentId" />
+        <result column="depPath" property="depPath" />
+        <result column="enabled" property="enabled" />
+        <result column="isParent" property="isParent" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, parentId, depPath, enabled, isParent
+    </sql>
+
+    <resultMap id="DepartmentWithChildren" type="com.gxy.server.pojo.Department" extends="BaseResultMap">
+        <!-- 递归查询-->
+        <collection property="children" ofType="com.gxy.server.pojo.Department" select="com.gxy.server.mapper.DepartmentMapper.getAllDepartments" column="id">
+
+        </collection>
+    </resultMap>
+
+    <!-- 获取所有部门-->
+    <select id="getAllDepartments" resultMap="DepartmentWithChildren">
+        select
+            <include refid="Base_Column_List"/>
+        from t_department
+        where parentId = #{parentId}
+
+    </select>
+
+
+    <!-- 添加部门,调用mysql存储过程 -->
+    <select id="addDep" statementType="CALLABLE">
+        call addDep(#{name,mode=IN,jdbcType=VARCHAR},#{parentId,mode=IN,jdbcType=INTEGER},#{enabled,mode=IN,jdbcType=BOOLEAN},#{result,mode=OUT,jdbcType=INTEGER},#{id,mode=OUT,jdbcType=INTEGER})
+    </select>
+
+
+    <!-- 删除部门,调用mysql存储过程-->
+    <select id="deleteDep" statementType="CALLABLE">
+        call deleteDep(#{id,mode=IN,jdbcType=INTEGER},#{result,mode=OUT,jdbcType=INTEGER})
+    </select>
+</mapper>
